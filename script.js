@@ -1,4 +1,4 @@
-// --- Config: burayı düzenle ---
+// --- Config ---
 const owner = {
   name: "WhyDll",
   hero: "Deniz",
@@ -6,7 +6,6 @@ const owner = {
   initials: "DAY",
 };
 
-// Projeleri buradan yönet. link: tıklanınca açılacak URL
 const projects = [
   {
     title: "Cubi Planet",
