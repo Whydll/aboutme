@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -12,7 +12,7 @@
     />
     <meta
       name="description"
-      content="Neon karanlık tek sayfa portföy — projeler, hakkında ve iletişim."
+      content="Neon-themed portfolio — projects, about, and contact information."
     />
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -22,74 +22,74 @@
         <div class="logo">DS</div>
         <div>
           <div class="name" id="ownerName">Adın Soyad</div>
-          <div class="tag">Yazılımcı • Tasarımcı</div>
+          <div class="tag">Developer • Designer</div>
         </div>
       </div>
       <nav>
-        <a href="#about">Hakkımda</a>
-        <a href="#projects">Projeler</a>
-        <a href="#contact">İletişim</a>
+        <a href="#about">About</a>
+        <a href="#projects">Projects</a>
+        <a href="#contact">Contact</a>
       </nav>
     </header>
 
     <main>
       <section class="hero">
         <div class="hero-left">
-          <h1 class="intro">Merhaba — Ben <span id="heroName">Adın</span>.</h1>
+          <h1 class="intro">Hello — I'm <span id="heroName">Adın</span>.</h1>
           <p class="lead">
-            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Sunt
-            voluptas ipsum possimus ducimus cum! Libero fuga cum laborum, facere
-            nam asperiores numquam suscipit perferendis rem natus tempore
-            voluptatibus nostrum incidunt?.
+            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Deleniti
+            exercitationem ex delectus quibusdam necessitatibus. Harum vero
+            provident facilis quam. Labore iusto delectus quaerat id dolore?
+            Itaque unde aliquam mollitia quibusdam?
           </p>
           <div class="cta-row">
             <button class="btn primary" onclick="scrollToId('projects')">
-              Projeleri Gör
+              View Projects
             </button>
-            <a class="btn" href="#contact">İletişime Geç</a>
+            <a class="btn" href="#contact">Get in Touch</a>
           </div>
         </div>
         <div class="hero-right">
           <div class="profile-card">
             <div class="avatar" id="avatarInitials">AS</div>
             <div style="margin-top: 12px">
-              <div style="font-weight: 700">Pro</div>
-              <div class="tag">Konular: Backend, Oyun</div>
+              <div style="font-weight: 700">OPEN NAME</div>
+              <div class="tag">Expertise: Backend, Game</div>
             </div>
             <div class="socials">
               <a href="https://github.com/Whydll" aria-label="GitHub">GitHub</a>
               <a href="https://whydll.itch.io/" aria-label="Itch.io">Itch.io</a>
-              <a href="tupibabapro@gmail.com" aria-label="E-posta">Mail</a>
+              <a href="tupibabapro@gmail.com" aria-label="Email">Mail</a>
             </div>
           </div>
         </div>
       </section>
 
       <section id="about">
-        <h2>Hakkımda</h2>
+        <h2>About</h2>
         <div class="two-col">
           <div>
             <p class="small">
-              Benim adım <strong id="aboutName">Adın Soyad</strong>. Lorem ipsum
-              dolor sit amet consectetur adipisicing elit. Provident autem quos
-              accusamus libero error, inventore deleniti esse quia! Vero dolor
-              saepe in blanditiis eum. Ut exercitationem dolore dignissimos
-              aperiam esse.
+              Hi, I'm <strong id="aboutName">Adın Soyad</strong>. Lorem ipsum
+              dolor sit amet consectetur adipisicing elit. Error suscipit ipsa
+              alias perferendis optio ex incidunt minus odio tenetur placeat
+              iste sapiente nihil dicta accusamus aut, dignissimos, natus
+              officiis animi.
             </p>
             <div style="margin-top: 12px">
-              <strong>Kullandığım teknolojiler</strong>
+              <strong>Technologies</strong>
               <p class="small">
                 JavaScript • Node.js • C# • C++ • Python • God's Language
               </p>
             </div>
           </div>
           <aside class="profile-card">
-            <div style="font-weight: 700">Özet</div>
-            <p class="small">Konum: Türkiye</p>
-            <p class="small">Deneyim: 3+ yıl</p>
+            <div style="font-weight: 700">Summary</div>
+            <p class="small">Location: Turkey</p>
+            <p class="small">Experience: 3+ years</p>
             <p class="small">
-              E-posta:
-              <a href="mailto:ornek@eposta.com">tupibabapro@gmail.com</a>
+              Email:
+              <a href="mailto:tupibabapro@gmail.com">tupibabapro@gmail.com</a>
             </p>
           </aside>
         </div>
@@ -98,9 +98,10 @@
       <section id="projects">
         <div class="projects-top">
           <div>
-            <h2>Projeler</h2>
+            <h2>Projects</h2>
             <p class="small">
-              Projelerim aşağıda. Tıklayarak yeni sekmede açabilirsin.
+              Projects are listed below. You can filter by categories to find
+              what you're looking for.
             </p>
           </div>
           <div class="categories" id="categories">
@@ -114,17 +115,17 @@
       </section>
 
       <section id="contact">
-        <h2>İletişim</h2>
+        <h2>Contact</h2>
         <div class="two-col">
           <div>
             <p class="small">
-              Bana doğrudan e-posta at:
-              <a id="mailLink" href="mailto:ornek@eposta.com"
+              You can reach me at:
+              <a id="mailLink" href="mailto:tupibabapro@gmail.com"
                 >tupibabapro@gmail.com</a
               >
             </p>
             <p class="small">
-              Veya sosyal bağlantıları kullanarak ulaşabilirsin.
+              Or you can use the form below to send me a message.
             </p>
             <div style="margin-top: 12px">
               <form
@@ -133,7 +134,7 @@
                 <div style="display: flex; gap: 8px; margin-bottom: 8px">
                   <input
                     required
-                    placeholder="Adın"
+                    placeholder="Name"
                     style="
                       flex: 1;
                       padding: 10px;
@@ -145,7 +146,7 @@
                   />
                   <input
                     required
-                    placeholder="E-posta"
+                    placeholder="Email"
                     style="
                       flex: 1;
                       padding: 10px;
@@ -158,7 +159,7 @@
                 </div>
                 <textarea
                   required
-                  placeholder="Mesaj"
+                  placeholder="Message"
                   style="
                     width: 100%;
                     padding: 10px;
@@ -170,13 +171,13 @@
                   "
                 ></textarea>
                 <div style="margin-top: 8px">
-                  <button class="btn primary" type="submit">Gönder</button>
+                  <button class="btn primary" type="submit">Send</button>
                 </div>
               </form>
             </div>
           </div>
           <aside class="profile-card">
-            <div style="font-weight: 700">Sosyal</div>
+            <div style="font-weight: 700">Social</div>
             <div
               class="socials"
               style="
@@ -187,7 +188,7 @@
             >
               <a href="https://github.com/Whydll" aria-label="GitHub">GitHub</a>
               <a href="https://whydll.itch.io/" aria-label="Itch.io">Itch.io</a>
-              <a href="tupibabapro@gmail.com" aria-label="E-posta">Mail</a>
+              <a href="tupibabapro@gmail.com" aria-label="Email">Mail</a>
             </div>
           </aside>
         </div>
