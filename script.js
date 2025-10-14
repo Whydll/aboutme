@@ -22,7 +22,7 @@ const projects = [
     img: "https://img.itch.zone/aW1nLzIxODEyMzkyLnBuZw==/315x250%23c/GuhGF3.png",
   },
   {
-    title: "Shower Date Planner",
+    title: "Shower Planner",
     short: "its funny",
     category: "Web",
     link: "https://github.com/Whydll/shower-planner",
