@@ -1,7 +1,4 @@
 # aboutme
 
-everything is ai
-
--me too
-
+made by ai (mostly)
 https://whydll.github.io/aboutme/
