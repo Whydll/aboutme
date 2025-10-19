@@ -1,206 +1,936 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WhyDll</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Whydll</title>
+    <!-- https://www.youtube.com/watch?v=u5IuKGp2LWY background video if you want -->
+
+    <!-- ========== CONFIG (top of file) ==========
+         Edit file paths and quick settings here.
+         - videoPath: path to background video
+         - audioPath: path to background audio
+         - avatarPath: avatar image path (can be data URL)
+         - autoplayMusic: true/false (attempt autoplay on load)
+         - videoOverlayAlpha: 0.0 - 1.0 (how dark overlay is)
+         - cardBgAlpha: 0.0 - 1.0 (card background opacity)
+         - reduceMotion: true/false (forces reduced motion if desired)
+    ============================================ -->
+    <script>
+      const CONFIG = {
+        // paths
+        videoPath: "assets/video.mp4",
+        audioPath: "assets/audio.webm",
+        avatarPath:
+          "https://avatars.githubusercontent.com/u/193411351?v=4' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236ee7b7;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%237c3aed;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23grad)'/%3E%3Ctext x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-weight='bold'%3EL%3C/text%3E%3C/svg%3E",
+
+        // behaviour
+        autoplayMusic: true,
+        // doesnt work bc of some chrome features. user needs to interact with page first so you cant start automatically
+
+        // visuals (0.0 - 1.0)
+        videoOverlayAlpha: 0.25, // lower = brighter video
+        cardBgAlpha: 0.08, // lower = more transparent card
+
+        // whether to force prefers-reduced-motion behavior
+        reduceMotion: false,
+      };
+
+      // Immediately set CSS variables so JS can influence initial look quickly.
+      (function applyConfigCSSVars() {
+        const root = document.documentElement.style;
+        root.setProperty("--overlay-alpha", CONFIG.videoOverlayAlpha);
+        root.setProperty("--card-bg-alpha", CONFIG.cardBgAlpha);
+      })();
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cabin+Sketch&family=Inter:wght@300;400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@600;700&display=swap"
       rel="stylesheet"
     />
-    <meta
-      name="description"
-      content="Neon-themed portfolio — projects, about, and contact information."
-    />
-    <link rel="stylesheet" href="style.css" />
+
+    <style>
+      :root {
+        --bg-dark: #0b0f14;
+        --card-bg: #0f1720;
+        --card-border: rgba(255, 255, 255, 0.06);
+        --accent: #6ee7b7;
+        --accent-purple: #7c3aed;
+        --text-primary: #ffffff;
+        --text-secondary: #94a3b8;
+        --glow: rgba(110, 231, 183, 0.22);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        /* overridable by JS CONFIG */
+        --overlay-alpha: 0.55; /* default, JS will override from CONFIG */
+        --card-bg-alpha: 0.18; /* default, JS will override from CONFIG */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: var(--bg-dark);
+        color: var(--text-primary);
+        overflow-x: hidden;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Background Video Container */
+      .video-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -3;
+        overflow: hidden;
+      }
+
+      .video-background video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.1s ease-out;
+      }
+
+      /* Reduced darkness overlay — uses CSS var for alpha */
+      .video-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          135deg,
+          rgba(11, 15, 20, var(--overlay-alpha)) 0%,
+          rgba(15, 23, 32, calc(var(--overlay-alpha) + 0.05)) 50%,
+          rgba(11, 15, 20, var(--overlay-alpha)) 100%
+        );
+        z-index: -2;
+        pointer-events: none;
+      }
+
+      /* Particle overlay */
+      .grain-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        opacity: 0.03;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' /%3E%3C/svg%3E");
+        pointer-events: none;
+      }
+
+      /* Main Container */
+      main {
+        position: relative;
+        z-index: 1;
+        width: 90%;
+        max-width: 800px;
+        padding: 3rem 2.5rem;
+        /* use CSS var for card alpha (set from CONFIG) */
+        background: rgba(15, 23, 32, var(--card-bg-alpha));
+        backdrop-filter: blur(14px);
+        border: 1px solid var(--card-border);
+        border-radius: 2rem;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45),
+          0 0 40px rgba(110, 231, 183, 0.06);
+        opacity: 0;
+        transform: scale(0.8) translateY(30px);
+        animation: zoomFadeIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        animation-delay: 0.2s;
+        transition: transform 0.2s ease-out;
+        transform-style: preserve-3d;
+      }
+
+      @keyframes zoomFadeIn {
+        0% {
+          opacity: 0;
+          transform: scale(0.8) translateY(30px);
+        }
+        50% {
+          opacity: 0.5;
+          transform: scale(1.02) translateY(0);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      /* Header Section */
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 1rem;
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 16px rgba(110, 231, 183, 0.08);
+        object-fit: cover;
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-purple)
+        );
+        transition: transform 0.3s ease;
+      }
+
+      main:hover .avatar {
+        transform: scale(1.05) rotate(5deg);
+      }
+
+      .header-text h1 {
+        font-family: "Poppins", sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        background: linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-purple)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        transition: transform 0.3s ease;
+      }
+
+      main:hover .header-text h1 {
+        transform: translateX(5px);
+      }
+
+      .header-text p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        font-weight: 400;
+      }
+
+      /* Bio Section */
+      .bio {
+        margin: 2rem 0;
+        line-height: 1.7;
+        color: var(--text-secondary);
+      }
+
+      .bio p {
+        margin-bottom: 1rem;
+      }
+
+      /* Tags */
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 1.5rem 0 2rem;
+      }
+
+      .tag {
+        padding: 0.4rem 1rem;
+        background: rgba(110, 231, 183, 0.08);
+        border: 1px solid rgba(110, 231, 183, 0.18);
+        border-radius: 2rem;
+        font-size: 0.85rem;
+        color: var(--accent);
+        font-weight: 500;
+        transition: var(--transition);
+      }
+
+      .tag:hover {
+        background: rgba(110, 231, 183, 0.14);
+        transform: translateY(-2px);
+      }
+
+      /* Buttons */
+      .buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+        margin: 2rem 0;
+      }
+
+      .btn {
+        padding: 0.9rem 1.5rem;
+        background: rgba(110, 231, 183, 0.08);
+        border: 1px solid rgba(110, 231, 183, 0.18);
+        border-radius: 0.75rem;
+        color: var(--accent);
+        text-decoration: none;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: var(--transition);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(110, 231, 183, 0.12);
+        transform: translate(-50%, -50%);
+        transition: width 0.4s, height 0.4s;
+      }
+
+      .btn:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .btn:hover {
+        transform: translateY(-3px) scale(1.03);
+        box-shadow: 0 10px 30px rgba(110, 231, 183, 0.06);
+        border-color: var(--accent);
+      }
+
+      .btn span {
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Social Links */
+      .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--card-border);
+      }
+
+      .social-link {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 0.75rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: var(--transition);
+        font-size: 1.2rem;
+      }
+
+      .social-link:hover {
+        background: rgba(110, 231, 183, 0.12);
+        border-color: var(--accent);
+        color: var(--accent);
+        transform: translateY(-3px) rotate(5deg);
+        box-shadow: 0 8px 20px rgba(110, 231, 183, 0.06);
+      }
+
+      /* Music Control */
+      .music-control {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        width: 60px;
+        height: 60px;
+        background: rgba(15, 23, 32, 0.9);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition);
+        z-index: 100;
+      }
+
+      .music-control:hover {
+        transform: scale(1.1) rotate(15deg);
+        box-shadow: 0 0 30px rgba(110, 231, 183, 0.12);
+        border-color: var(--accent);
+      }
+
+      .music-control.playing {
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(110, 231, 183, 0.12);
+        }
+        50% {
+          box-shadow: 0 0 40px rgba(110, 231, 183, 0.16);
+        }
+      }
+
+      .music-icon {
+        font-size: 1.5rem;
+        color: var(--accent);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        main {
+          padding: 2rem 1.5rem;
+        }
+
+        .card-header {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .header-text h1 {
+          font-size: 1.5rem;
+        }
+
+        .buttons {
+          grid-template-columns: 1fr;
+        }
+
+        .music-control {
+          bottom: 1rem;
+          right: 1rem;
+          width: 50px;
+          height: 50px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        main {
+          width: 95%;
+          padding: 1.5rem 1.25rem;
+        }
+
+        .avatar {
+          width: 60px;
+          height: 60px;
+        }
+
+        .header-text h1 {
+          font-size: 1.3rem;
+        }
+
+        .social-links {
+          gap: 1rem;
+        }
+
+        .social-link {
+          width: 40px;
+          height: 40px;
+        }
+      }
+
+      /* Reduced Motion */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+
+        .video-background video {
+          transform: none !important;
+        }
+      }
+
+      /* Loading state for video */
+      .video-background::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--bg-dark);
+        z-index: 1;
+      }
+
+      .video-background.loaded::before {
+        display: none;
+      }
+
+      /* Particles (simple) */
+      .particles {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+      }
+
+      .particle {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 50%;
+        animation: floatUp linear infinite;
+      }
+
+      @keyframes floatUp {
+        from {
+          transform: translateY(0) scale(1);
+        }
+        to {
+          transform: translateY(-120vh) scale(0.6);
+        }
+      }
+    </style>
   </head>
   <body>
-    <header>
-      <div class="brand">
-        <div class="logo">DS</div>
-        <div>
-          <div class="name" id="ownerName">Adın Soyad</div>
-          <div class="tag">Developer • Designer</div>
+    <!-- Background Video -->
+    <div class="video-background" id="videoBackground">
+      <video
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        id="bgVideo"
+        crossorigin="anonymous"
+      >
+        <source src="" type="video/mp4" />
+        <!-- fallback text -->
+      </video>
+    </div>
+
+    <!-- Video Overlay -->
+    <div class="video-overlay"></div>
+
+    <!-- Grain Texture -->
+    <div class="grain-overlay"></div>
+
+    <!-- Glow Orbs -->
+    <div class="glow-orbs" aria-hidden="true">
+      <div class="orb"></div>
+      <div class="orb"></div>
+      <div class="orb"></div>
+    </div>
+
+    <!-- Floating Particles -->
+    <div class="particles" id="particlesContainer"></div>
+
+    <!-- Spotlight Effect -->
+    <div class="spotlight" id="spotlight" aria-hidden="true"></div>
+
+    <!-- Main Card -->
+    <main class="card" role="main" aria-label="About card">
+      <!-- Header -->
+      <header class="card-header card-layer layer-2">
+        <img src="" alt="Avatar" class="avatar" id="avatarImg" loading="lazy" />
+        <div class="header-text">
+          <h1>WHYDLL WHYDLL - ABOUT ME TEMPLATE</h1>
+          <p>Shitty Developer // Not Creative</p>
         </div>
+      </header>
+
+      <!-- Bio -->
+      <section class="bio card-layer layer-1">
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+          minim veniam, quis nostrud exercitation ullamco laboris.
+        </p>
+        <p>
+          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+          dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+          proident.
+        </p>
+      </section>
+
+      <!-- Tags -->
+      <div class="tags">
+        <span class="tag">Java</span>
+        <span class="tag">Python</span>
+        <span class="tag">C#</span>
+        <span class="tag">C++</span>
+        <span class="tag">Web Design</span>
       </div>
-      <nav>
-        <a href="#about">About</a>
-        <a href="#projects">Projects</a>
-        <a href="#contact">Contact</a>
+
+      <!-- Buttons -->
+      <nav class="buttons card-layer layer-3">
+        <a
+          href="https://github.com/Whydll"
+          class="btn"
+          aria-label="View Portfolio"
+        >
+          <span>Portfolio</span>
+        </a>
+        <a
+          href="https://github.com/Whydll"
+          class="btn"
+          aria-label="Download Resume"
+        >
+          <span>Resume</span>
+        </a>
+        <a href="https://github.com/Whydll" class="btn" aria-label="Contact Me">
+          <span>Contact</span>
+        </a>
+        <a
+          href="https://github.com/Whydll"
+          class="btn"
+          aria-label="Join Discord"
+        >
+          <span>Discord</span>
+        </a>
       </nav>
-    </header>
 
-    <main>
-      <section class="hero">
-        <div class="hero-left">
-          <h1 class="intro">Hello — I'm <span id="heroName">Adın</span>.</h1>
-          <p class="lead">
-            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Deleniti
-            exercitationem ex delectus quibusdam necessitatibus. Harum vero
-            provident facilis quam. Labore iusto delectus quaerat id dolore?
-            Itaque unde aliquam mollitia quibusdam?
-          </p>
-          <div class="cta-row">
-            <button class="btn primary" onclick="scrollToId('projects')">
-              View Projects
-            </button>
-            <a class="btn" href="#contact">Get in Touch</a>
-          </div>
-        </div>
-        <div class="hero-right">
-          <div class="profile-card">
-            <div class="avatar" id="avatarInitials">AS</div>
-            <div style="margin-top: 12px">
-              <div style="font-weight: 700">OPEN NAME</div>
-              <div class="tag">Expertise: Backend, Game</div>
-            </div>
-            <div class="socials">
-              <a href="https://github.com/Whydll" aria-label="GitHub">GitHub</a>
-              <a href="https://whydll.itch.io/" aria-label="Itch.io">Itch.io</a>
-              <a href="tupibabapro@gmail.com" aria-label="Email">Mail</a>
-            </div>
-          </div>
-        </div>
-      </section>
+      <!-- Social Links -->
+      <div class="social-links">
+        <!-- GitHub -->
+        <a
+          href="https://github.com/Whydll"
+          target="_blank"
+          class="social-link"
+          aria-label="GitHub Profile"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
+            ></path>
+          </svg>
+        </a>
+        <!-- itch -->
+        <a
+          href="https://whydll.itch.io/"
+          target="_blank"
+          class="social-link"
+          aria-label="Itch.io Profile"
+        >
+          <img
+            src="https://www.svgrepo.com/show/314217/itch-io.svg"
+            alt="Itch.io"
+            width="20"
+            height="20"
+            style="filter: invert(1)"
+          />
+        </a>
 
-      <section id="about">
-        <h2>About</h2>
-        <div class="two-col">
-          <div>
-            <p class="small">
-              Hi, I'm <strong id="aboutName">Adın Soyad</strong>. Lorem ipsum
-              dolor sit amet consectetur adipisicing elit. Error suscipit ipsa
-              alias perferendis optio ex incidunt minus odio tenetur placeat
-              iste sapiente nihil dicta accusamus aut, dignissimos, natus
-              officiis animi.
-            </p>
-            <div style="margin-top: 12px">
-              <strong>Technologies</strong>
-              <p class="small">
-                JavaScript • Node.js • C# • C++ • Python • God's Language
-              </p>
-            </div>
-          </div>
-          <aside class="profile-card">
-            <div style="font-weight: 700">Summary</div>
-            <p class="small">Location: Turkey</p>
-            <p class="small">Experience: 3+ years</p>
-            <p class="small">
-              Email:
-              <a href="mailto:tupibabapro@gmail.com">tupibabapro@gmail.com</a>
-            </p>
-          </aside>
-        </div>
-      </section>
-
-      <section id="projects">
-        <div class="projects-top">
-          <div>
-            <h2>Projects</h2>
-            <p class="small">
-              Projects are listed below. You can filter by categories to find
-              what you're looking for.
-            </p>
-          </div>
-          <div class="categories" id="categories">
-            <!-- categories injected by JS -->
-          </div>
-        </div>
-
-        <div class="carousel" id="projectCarousel" tabindex="0">
-          <!-- project cards injected by JS -->
-        </div>
-      </section>
-
-      <section id="contact">
-        <h2>Contact</h2>
-        <div class="two-col">
-          <div>
-            <p class="small">
-              You can reach me at:
-              <a id="mailLink" href="mailto:tupibabapro@gmail.com"
-                >tupibabapro@gmail.com</a
-              >
-            </p>
-            <p class="small">
-              Or you can use the form below to send me a message.
-            </p>
-            <div style="margin-top: 12px">
-              <form
-                onsubmit="event.preventDefault(); alert('bu özelliği yapmadım btw');"
-              >
-                <div style="display: flex; gap: 8px; margin-bottom: 8px">
-                  <input
-                    required
-                    placeholder="Name"
-                    style="
-                      flex: 1;
-                      padding: 10px;
-                      border-radius: 8px;
-                      border: 1px solid rgba(255, 255, 255, 0.04);
-                      background: transparent;
-                      color: white;
-                    "
-                  />
-                  <input
-                    required
-                    placeholder="Email"
-                    style="
-                      flex: 1;
-                      padding: 10px;
-                      border-radius: 8px;
-                      border: 1px solid rgba(255, 255, 255, 0.04);
-                      background: transparent;
-                      color: white;
-                    "
-                  />
-                </div>
-                <textarea
-                  required
-                  placeholder="Message"
-                  style="
-                    width: 100%;
-                    padding: 10px;
-                    border-radius: 8px;
-                    border: 1px solid rgba(255, 255, 255, 0.04);
-                    background: transparent;
-                    color: white;
-                    height: 110px;
-                  "
-                ></textarea>
-                <div style="margin-top: 8px">
-                  <button class="btn primary" type="submit">Send</button>
-                </div>
-              </form>
-            </div>
-          </div>
-          <aside class="profile-card">
-            <div style="font-weight: 700">Social</div>
-            <div
-              class="socials"
-              style="
-                margin-top: 12px;
-                flex-direction: column;
-                align-items: flex-start;
-              "
-            >
-              <a href="https://github.com/Whydll" aria-label="GitHub">GitHub</a>
-              <a href="https://whydll.itch.io/" aria-label="Itch.io">Itch.io</a>
-              <a href="tupibabapro@gmail.com" aria-label="Email">Mail</a>
-            </div>
-          </aside>
-        </div>
-      </section>
+        <!--  
+        <a
+          href="https://whydll.itch.io/"
+          target="_blank"
+          class="social-link"
+          aria-label="Discord Server"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"
+            ></path>
+          </svg>
+        </a>
+        
+         -->
+      </div>
     </main>
 
-    <footer>
-      <div>
-        © <span id="year"></span> <span id="footerName">Adın Soyad</span>
-      </div>
-    </footer>
+    <!-- Music Control Button -->
+    <button
+      class="music-control"
+      id="musicBtn"
+      aria-label="Toggle Background Music"
+      title="Toggle background music"
+    >
+      <span class="music-icon" id="musicIcon">♫</span>
+    </button>
 
-    <script src="script.js"></script>
+    <!-- Audio Element -->
+    <audio id="bgMusic" loop crossorigin="anonymous">
+      <source src="" type="audio/webm" />
+      <!-- fallback -->
+    </audio>
+
+    <script>
+      /********************
+       * Apply CONFIG paths and initial behavior
+       ********************/
+      (function initFromConfig() {
+        // Apply reduce-motion override if requested
+        if (CONFIG.reduceMotion) {
+          document
+            .querySelector("html")
+            .setAttribute("data-prefers-reduced-motion", "true");
+        }
+
+        // Set video source
+        const bgVideo = document.getElementById("bgVideo");
+        const videoSource = bgVideo.querySelector("source");
+        videoSource.src = CONFIG.videoPath;
+        // set audio source
+        const bgMusic = document.getElementById("bgMusic");
+        const audioSource = bgMusic.querySelector("source");
+        audioSource.src = CONFIG.audioPath;
+        // avatar
+        const avatarImg = document.getElementById("avatarImg");
+        avatarImg.src = CONFIG.avatarPath;
+
+        // update CSS vars (already set earlier, but re-apply in case)
+        document.documentElement.style.setProperty(
+          "--overlay-alpha",
+          CONFIG.videoOverlayAlpha
+        );
+        document.documentElement.style.setProperty(
+          "--card-bg-alpha",
+          CONFIG.cardBgAlpha
+        );
+
+        // force video to reload the new source (useful when swapping paths dynamically)
+        bgVideo.load();
+        bgMusic.load();
+      })();
+    </script>
+
+    <script>
+      // Elements
+      const videoElement = document.getElementById("bgVideo");
+      const videoContainer = document.getElementById("videoBackground");
+      const spotlight = document.getElementById("spotlight");
+      const mainCard = document.querySelector("main");
+      const prefersReducedMotion =
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+        document.documentElement.getAttribute("data-prefers-reduced-motion") ===
+          "true";
+
+      // Mouse position tracking
+      let mouseX = 0;
+      let mouseY = 0;
+      let cursorX = 0;
+      let cursorY = 0;
+
+      if (!prefersReducedMotion) {
+        // Enhanced parallax with multiple layers
+        document.addEventListener("mousemove", (e) => {
+          mouseX = e.clientX;
+          mouseY = e.clientY;
+
+          const centerX = window.innerWidth / 2;
+          const centerY = window.innerHeight / 2;
+
+          // Calculate distance from center (normalized -1 to 1)
+          const deltaX = (mouseX - centerX) / centerX;
+          const deltaY = (mouseY - centerY) / centerY;
+
+          // Video parallax (strongest)
+          const videoMoveX = deltaX * 30;
+          const videoMoveY = deltaY * 30;
+          videoElement.style.transform = `translate(${videoMoveX}px, ${videoMoveY}px) scale(1.1)`;
+
+          // Card 3D tilt effect
+          const tiltX = deltaY * 5; // Tilt around X axis (up/down)
+          const tiltY = -deltaX * 5; // Tilt around Y axis (left/right)
+          mainCard.style.transform = `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1)`;
+
+          // Orbs parallax
+          const orbs = document.querySelectorAll(".orb");
+          orbs.forEach((orb, index) => {
+            const speed = (index + 1) * 10;
+            const x = deltaX * speed;
+            const y = deltaY * speed;
+            orb.style.transform = `translate(${x}px, ${y}px)`;
+          });
+
+          // Update spotlight (CSS vars may be used by custom spotlight style)
+          spotlight.style.setProperty("--mouse-x", mouseX + "px");
+          spotlight.style.setProperty("--mouse-y", mouseY + "px");
+        });
+
+        // Custom cursor with smooth follow
+        function animateCursor() {
+          // Smooth following effect
+          cursorX += (mouseX - cursorX) * 0.15;
+          cursorY += (mouseY - cursorY) * 0.15;
+
+          requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Reset card tilt when mouse leaves
+        document.addEventListener("mouseleave", () => {
+          mainCard.style.transform =
+            "perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)";
+        });
+      }
+
+      // Create floating particles
+      function createParticles() {
+        const particlesContainer =
+          document.getElementById("particlesContainer");
+        const particleCount = 18;
+
+        for (let i = 0; i < particleCount; i++) {
+          const particle = document.createElement("div");
+          particle.className = "particle";
+
+          // Random positioning
+          particle.style.left = Math.random() * 100 + "%";
+          particle.style.top = 80 + Math.random() * 20 + "%";
+          particle.style.animationDuration = Math.random() * 12 + 18 + "s";
+          particle.style.animationDelay = Math.random() * 5 + "s";
+
+          // Random size variation
+          const size = Math.random() * 3 + 2;
+          particle.style.width = size + "px";
+          particle.style.height = size + "px";
+
+          particlesContainer.appendChild(particle);
+        }
+      }
+
+      if (!prefersReducedMotion) {
+        createParticles();
+      }
+
+      // Video loaded state
+      videoElement.addEventListener("loadeddata", () => {
+        videoContainer.classList.add("loaded");
+      });
+
+      // Music control logic
+      const musicBtn = document.getElementById("musicBtn");
+      const bgMusic = document.getElementById("bgMusic");
+      const musicIcon = document.getElementById("musicIcon");
+      let isPlaying = true;
+
+      // Try to autoplay if CONFIG.autoplayMusic is true.
+      // Note: browsers may block autoplay with sound. We attempt to play and
+      // if it's blocked we'll remain paused until user interacts (musicBtn).
+      document.addEventListener("DOMContentLoaded", () => {
+        if (CONFIG.autoplayMusic) {
+          // Attempt to unmute and play. If browser blocks, we'll catch and keep paused.
+          bgMusic
+            .play()
+            .then(() => {
+              isPlaying = true;
+              musicBtn.classList.add("playing");
+              musicIcon.textContent = "♪";
+            })
+            .catch((err) => {
+              // Autoplay prevented — leave UI ready for user to start audio.
+              console.warn("Autoplay prevented or failed:", err);
+              isPlaying = false;
+              musicBtn.classList.remove("playing");
+              musicIcon.textContent = "♫";
+            });
+        }
+      });
+
+      musicBtn.addEventListener("click", () => {
+        if (isPlaying) {
+          bgMusic.pause();
+          musicBtn.classList.remove("playing");
+          musicIcon.textContent = "♫";
+          isPlaying = false;
+        } else {
+          bgMusic
+            .play()
+            .then(() => {
+              musicBtn.classList.add("playing");
+              musicIcon.textContent = "♪";
+              isPlaying = true;
+            })
+            .catch((err) => {
+              console.log("Audio playback failed:", err);
+              // Optionally show a tiny inline notice or fallback here
+            });
+        }
+      });
+
+      // Button ripple effect enhancement
+      const buttons = document.querySelectorAll(".btn");
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          const rect = this.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const href = this.getAttribute("href");
+          if (href) {
+            window.open(href, "_blank");
+          }
+          const ripple = document.createElement("span");
+          ripple.style.cssText = `
+                    position: absolute;
+                    left: ${x}px;
+                    top: ${y}px;
+                    width: 0;
+                    height: 0;
+                    border-radius: 50%;
+                    background: rgba(110, 231, 183, 0.5);
+                    transform: translate(-50%, -50%);
+                    animation: ripple 0.6s ease-out;
+                    pointer-events: none;
+                `;
+
+          this.appendChild(ripple);
+          setTimeout(() => ripple.remove(), 600);
+        });
+      });
+
+      // Add ripple animation
+      const style = document.createElement("style");
+      style.textContent = `
+            @keyframes ripple {
+                to {
+                    width: 200px;
+                    height: 200px;
+                    opacity: 0;
+                }
+            }
+        `;
+      document.head.appendChild(style);
+
+      // Keyboard navigation enhancement
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && isPlaying) {
+          musicBtn.click();
+        }
+      });
+
+      // Performance optimization: Pause video when tab is hidden
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          videoElement.pause();
+        } else {
+          // Only resume if it was previously playing (we can't detect autoplay state reliably)
+          // Attempt to play the video (muted autoplay is usually allowed)
+          videoElement.play().catch(() => {});
+        }
+      });
+    </script>
   </body>
 </html>
