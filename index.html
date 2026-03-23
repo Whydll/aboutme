@@ -859,10 +859,10 @@
           const source = audioCtx.createMediaElementSource(bgMusic);
           gainNode = audioCtx.createGain();
 
-          // --- SES SEVİYESİ AYARI ---
-          // 1.0 normaldir. 3.0 sesi 3 katına çıkarır.
-          // Çok artırırsan seste cızırtı (distortion) yapabilir.
-          gainNode.gain.value = 5.0;
+          // --- DISTORTION EXAMPLE ---
+          // 1.0 normal direction. 3.0 session is split into 3 parts.
+          // Very distorted circle (distortion) can be created.
+          gainNode.gain.value = 5.0; // depends on your audio file or just make it 1 for deafault
 
           source.connect(gainNode);
           gainNode.connect(audioCtx.destination);
