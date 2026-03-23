@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -145,7 +145,8 @@
         backdrop-filter: blur(14px);
         border: 1px solid var(--card-border);
         border-radius: 2rem;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45),
+        box-shadow:
+          0 12px 40px rgba(0, 0, 0, 0.45),
           0 0 40px rgba(110, 231, 183, 0.06);
         opacity: 0;
         transform: scale(0.8) translateY(30px);
@@ -292,7 +293,9 @@
         border-radius: 50%;
         background: rgba(110, 231, 183, 0.12);
         transform: translate(-50%, -50%);
-        transition: width 0.4s, height 0.4s;
+        transition:
+          width 0.4s,
+          height 0.4s;
       }
 
       .btn:hover::before {
@@ -702,11 +705,11 @@
         // update CSS vars (already set earlier, but re-apply in case)
         document.documentElement.style.setProperty(
           "--overlay-alpha",
-          CONFIG.videoOverlayAlpha
+          CONFIG.videoOverlayAlpha,
         );
         document.documentElement.style.setProperty(
           "--card-bg-alpha",
-          CONFIG.cardBgAlpha
+          CONFIG.cardBgAlpha,
         );
 
         // force video to reload the new source (useful when swapping paths dynamically)
@@ -848,8 +851,22 @@
             });
         }
       });
-
+      let audioCtx;
+      let gainNode;
       musicBtn.addEventListener("click", () => {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioCtx.createMediaElementSource(bgMusic);
+          gainNode = audioCtx.createGain();
+
+          // --- SES SEVİYESİ AYARI ---
+          // 1.0 normaldir. 3.0 sesi 3 katına çıkarır.
+          // Çok artırırsan seste cızırtı (distortion) yapabilir.
+          gainNode.gain.value = 5.0;
+
+          source.connect(gainNode);
+          gainNode.connect(audioCtx.destination);
+        }
         if (isPlaying) {
           bgMusic.pause();
           musicBtn.classList.remove("playing");
